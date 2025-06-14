@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
 function Library() {
   const [contents, setContents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate(); // Initialize the navigate function
+  const navigate = useNavigate();
 
   useEffect(() => {
     getContents();
@@ -13,19 +13,33 @@ function Library() {
 
   async function getContents() {
     setLoading(true);
-    const { data } = await supabase.from('content').select('*');
-    setContents(data);
+    // --- UPDATED QUERY ---
+    // This now joins with the languages and content_tags tables
+    // to get the actual names, not just the IDs.
+    const { data, error } = await supabase
+      .from('content')
+      .select(`
+        *,
+        languages ( name ),
+        content_tags ( name )
+      `);
+
+    if (error) {
+      console.error("Error fetching content:", error);
+    } else {
+      setContents(data);
+    }
     setLoading(false);
   }
 
-  // --- NEW: Function to create a blank entry and redirect ---
   async function handleCreateNew() {
-    // Insert a new row with a default title.
-    // .select().single() is crucial: it returns the newly created row, including its id.
+    // --- UPDATED INSERT ---
+    // Inserts a new row with default values.
+    // We now use language_id and tag_id and set them to null by default.
     const { data: newContent, error } = await supabase
       .from('content')
       .insert([
-        { title: '', language: '', content: '' }
+        { title: 'Untitled', content: '', language_id: null, tag_id: null }
       ])
       .select()
       .single();
@@ -34,8 +48,6 @@ function Library() {
       console.error('Error creating new content:', error);
       alert('Could not create new content.');
     } else {
-      // If creation is successful, navigate to the new content's page in edit mode.
-      // We add '?edit=true' to the URL to signal this.
       navigate(`/content/${newContent.id}?edit=true`);
     }
   }
@@ -45,9 +57,10 @@ function Library() {
   return (
     <div className="library-container">
       <h1>Content Library</h1>
+      
+      <Link to="/phrases" style={{ marginRight: '20px' }}>Go to Phrase Manager</Link>
 
-      {/* The form is gone, replaced by this single button */}
-      <button onClick={handleCreateNew} style={{ marginBottom: '20px' }}>
+      <button onClick={handleCreateNew} style={{ display: 'inline-block', marginBottom: '20px' }}>
         + Create New Content
       </button>
 
@@ -59,7 +72,10 @@ function Library() {
             <Link to={`/content/${content.id}`} key={content.id} className="content-card">
               <div className="cover-image" style={{ backgroundColor: '#ccc' }}></div>
               <h3>{content.title}</h3>
-              <p>{content.language || 'No language'}</p>
+              {/* --- UPDATED DISPLAY LOGIC --- */}
+              {/* This now accesses the nested name from the joined tables */}
+              <p>Language: {content.languages ? content.languages.name : 'N/A'}</p>
+              <p>Tag: {content.content_tags ? content.content_tags.name : 'None'}</p>
             </Link>
           ))}
         </div>
