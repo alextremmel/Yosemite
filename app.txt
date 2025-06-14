@@ -1,0 +1,71 @@
+oaoyrcXrIIziww89
+
+
+features
+library search brand
+sort options
+content tags (another field) to tak something like news article, short story, podcast ect
+
+
+
+Project Brief: Your Language Learning Application
+1. Core Philosophy & Vision
+
+The application is an offline-first, immersive reading and review system designed to help users move from an intermediate to an advanced level in their target language.
+
+Its core philosophy is built on two key principles of language acquisition:
+
+Comprehensible Input: The app helps users consume authentic content (books, articles, transcripts) by making it less intimidating. It provides a visual guide to what they know versus what they're learning, allowing them to comfortably read material that is slightly above their current level.
+Active Recall & Spaced Repetition: The app doesn't just expose the user to new vocabulary; it provides an intelligent system to systematically review that vocabulary in context, ensuring it moves from short-term recognition to long-term memory.
+2. Key Data Entities
+
+The entire app revolves around three main concepts:
+
+Phrases: The atomic unit of learning. This can be a single word or a short idiomatic phrase.
+Attributes: text, definition (optional), notes (optional), and a continuous Knowledge Score (a number from 0.0 for "brand new" to 1.0 for "mastered").
+Stories: The user's personal library of content. This is any text they import into the app to read, such as news articles, book chapters, or podcast transcripts.
+Practice Sentences: Specific sentences a user saves from a Story. These are interactive "fill-in-the-blank" exercises designed to reinforce grammar and the usage of known words in new contexts.
+3. The Core User Experience: The Learning Loop
+
+A user's journey through the app follows a virtuous cycle:
+
+Discover (Input): The user opens a Story from their library and begins reading.
+Capture (Interaction): While reading, they seamlessly add new Phrases to their personal collection with a single tap, or select interesting sentences to save as Practice Sentences.
+Review (Internalization): The user enters the "Review Hub," where a Spaced Repetition System (SRS) intelligently quizzes them on their Phrases and Practice Sentences at the optimal time to maximize retention.
+Reinforce (Recognition): The user opens a new Story and now sees the words they just reviewed are subtly underlined, reinforcing their memory in a new context and providing a tangible sense of progress.
+4. Screen-by-Screen Breakdown
+
+The application will be organized into a few key views or "pages":
+
+The Library View (Home Screen):
+
+A clean, grid-based view of all the Stories the user has added.
+A prominent button to import new Stories.
+This is the user's main starting point.
+The Reader View (The Heart of the App):
+
+Displays the full text of a selected Story.
+Dynamic Highlighting: Words from the user's Phrases list are unobtrusively underlined. The opacity of the underline is tied to the Knowledge Score—fainter for well-known words and more solid for new words. Mastered words have no underline.
+Frictionless Capture: Tapping on any unknown word brings up a simple pop-up to add it to the Phrases list instantly.
+Sentence Selection: The user can long-press or drag to select a full sentence and save it as a Practice Sentence. A dialog allows them to choose which of their known (Level 1-4) words in that sentence will become blanks for the quiz.
+The Review Hub:
+
+The central place for active study.
+Phrase Review: A classic flashcard-style SRS mode for individual vocabulary. The user rates their recall (Again, Hard, Good, Easy) to update the phrase's KnowledgeScore.
+Sentence Review: A "cloze test" mode where the user is presented with their Practice Sentences and must type in the missing words, testing their recall in a grammatical context.
+The "All Phrases" View:
+
+The user's complete, personal dictionary.
+A searchable and filterable list of every Phrase they have ever saved.
+Allows for detailed editing of definitions, notes, and manual adjustments to the Knowledge Score.
+5. Technical Architecture Summary
+
+Platform: A cross-platform Desktop Application for Windows and macOS.
+Core Framework: Electron, packaging web technologies into a native app.
+UI Framework: React with TypeScript for building the user interface.
+Data Storage: Offline-first using a local SQLite database file stored privately on the user's computer. There is no initial requirement for an internet connection or a cloud account.
+Future Possibilities:
+
+Adding an optional cloud sync feature (e.g., via Supabase) to back up data and enable multi-device use.
+Creating a simple, read-only "companion" web app for tablets.
+Developing a browser extension that connects to the running desktop app to provide highlighting on any webpage.
