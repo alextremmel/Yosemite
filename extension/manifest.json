@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Language Highlighter",
+  "name": "Language Highlighter 1",
   "version": "1.0",
   "description": "Highlights phrases from a central database on any web page.",
   "permissions": [
