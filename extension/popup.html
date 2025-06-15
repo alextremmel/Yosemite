@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Highlighter Control</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 10px;
+            width: 200px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #e0e0e0;
+        }
+        button:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <button id="reloadButton">Force Refresh Phrases</button>
+    <button id="toggleButton">Toggle Highlighting</button>
+    <script src="popup.js"></script>
+</body>
+</html>
