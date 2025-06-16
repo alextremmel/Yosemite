@@ -3,17 +3,36 @@ let currentWordList = {}; // This will be populated by processWordList from shar
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "highlightWords" && message.wordList) {
-    // processWordList is now available globally from shared/highlight.js
+    removeHighlights(); // Remove old highlights before applying new ones
     currentWordList = processWordList(message.wordList);
     debouncedApplyHighlighting();
     sendResponse({ status: "Highlighting initiated" });
+  } else if (message.action === "removeHighlights") {
+    removeHighlights();
+    sendResponse({ status: "Highlights removed" });
   }
   return true; // Keep the message channel open for asynchronous response
 });
 
+// --- FUNCTION TO REMOVE HIGHLIGHTS ---
+function removeHighlights() {
+    const highlightedElements = document.querySelectorAll('.highlighted-word');
+    highlightedElements.forEach(span => {
+        const parent = span.parentNode;
+        if (parent) {
+            const textNode = document.createTextNode(span.textContent);
+            parent.replaceChild(textNode, span);
+        }
+    });
+
+    // After replacing all spans, normalize the parent elements to merge adjacent text nodes.
+    const uniqueParents = new Set([...highlightedElements].map(el => el.parentNode).filter(p => p));
+    uniqueParents.forEach(parent => parent.normalize());
+}
+
+
 // Debounced function to reduce redundant highlighting calls
 const debouncedApplyHighlighting = debounce(() => {
-  // highlightWords is now available globally from shared/highlight.js
   if (Object.keys(currentWordList).length > 0) {
     highlightWords(currentWordList, document.body);
   }
@@ -21,7 +40,6 @@ const debouncedApplyHighlighting = debounce(() => {
 
 function applyHighlightingToNode(rootNode) {
   if (Object.keys(currentWordList).length > 0) {
-    // highlightWords is now available globally from shared/highlight.js
     highlightWords(currentWordList, rootNode);
   }
 }
@@ -40,7 +58,6 @@ const observer = new MutationObserver(mutations => {
   mutations.forEach(mutation => {
     if (mutation.addedNodes.length) {
       mutation.addedNodes.forEach(node => {
-        // Only apply to element nodes, and avoid running on script/style tags
         if (node.nodeType === Node.ELEMENT_NODE &&
             node.nodeName !== 'SCRIPT' &&
             node.nodeName !== 'STYLE') {

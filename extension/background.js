@@ -2,7 +2,11 @@
 import { supabase } from './supabaseClient.js';
 
 const CACHE_DURATION_MINUTES = 5;
-let highlightingStatus = {};
+
+// Initialize the global setting on install
+chrome.runtime.onInstalled.addListener(() => {
+    chrome.storage.local.set({ isHighlightingGloballyEnabled: true });
+});
 
 async function fetchPhrasesFromSupabase() {
   console.log('Fetching phrases from Supabase...');
@@ -47,10 +51,11 @@ async function getPhrases(force = false) {
   return phrases;
 }
 
+// Listens for tab updates (like new pages loading)
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url && tab.url.startsWith('http')) {
-    const isEnabled = highlightingStatus[tabId] !== false;
-    if (isEnabled) {
+    const data = await chrome.storage.local.get('isHighlightingGloballyEnabled');
+    if (data.isHighlightingGloballyEnabled) {
       const wordList = await getPhrases();
       if (wordList) {
         chrome.tabs.sendMessage(tabId, { action: 'highlightWords', wordList: wordList });
@@ -59,32 +64,63 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 });
 
+// Function to apply highlighting to all relevant tabs
+function applyHighlightsToAllTabs() {
+    getPhrases().then(wordList => {
+        if (!wordList) return;
+        chrome.tabs.query({ url: ["http://*/*", "https://*/*"] }, (tabs) => {
+            tabs.forEach(tab => {
+                chrome.tabs.sendMessage(tab.id, { action: 'highlightWords', wordList: wordList })
+                    .catch(e => console.log("Could not contact tab, it might be closed or protected."));
+            });
+        });
+    });
+}
+
+// Function to remove highlighting from all relevant tabs
+function removeHighlightsFromAllTabs() {
+    chrome.tabs.query({ url: ["http://*/*", "https://*/*"] }, (tabs) => {
+        tabs.forEach(tab => {
+            chrome.tabs.sendMessage(tab.id, { action: "removeHighlights" })
+                .catch(e => console.log("Could not contact tab, it might be closed or protected."));
+        });
+    });
+}
+
+// Handles messages from the popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "forceRefresh") {
-        console.log("Force refresh message received.");
         getPhrases(true).then(() => {
-            sendResponse({ status: "Cache refreshed successfully!" });
+            // After refreshing, re-apply highlights to all tabs if enabled
+            chrome.storage.local.get('isHighlightingGloballyEnabled', (data) => {
+                if (data.isHighlightingGloballyEnabled) {
+                    applyHighlightsToAllTabs();
+                }
+            });
+            sendResponse({ status: "Cache refreshed and highlights updated." });
         });
-        return true;
+        return true; 
     }
 
     if (message.action === "getHighlightingStatus") {
-        // --- FIXED: Read tabId from the message, not the sender ---
-        const tabId = message.tabId;
-        const isEnabled = highlightingStatus[tabId] !== false;
-        sendResponse({ isEnabled: isEnabled });
+        chrome.storage.local.get('isHighlightingGloballyEnabled', (data) => {
+            sendResponse({ isEnabled: !!data.isHighlightingGloballyEnabled });
+        });
+        return true;
     }
     
     if (message.action === "toggleHighlighting") {
-        // --- FIXED: Read tabId from the message, not the sender ---
-        const tabId = message.tabId;
-        highlightingStatus[tabId] = !(highlightingStatus[tabId] !== false);
-        const isNowEnabled = highlightingStatus[tabId];
-        sendResponse({ isEnabled: isNowEnabled });
+        chrome.storage.local.get('isHighlightingGloballyEnabled', (data) => {
+            const newStatus = !data.isHighlightingGloballyEnabled;
+            chrome.storage.local.set({ isHighlightingGloballyEnabled: newStatus }, () => {
+                if (newStatus) {
+                    applyHighlightsToAllTabs();
+                } else {
+                    removeHighlightsFromAllTabs();
+                }
+                sendResponse({ isEnabled: newStatus });
+            });
+        });
+        return true;
     }
-});
-
-chrome.tabs.onRemoved.addListener((tabId) => {
-    delete highlightingStatus[tabId];
-    console.log(`Cleaned up highlighting status for closed tab: ${tabId}`);
 });

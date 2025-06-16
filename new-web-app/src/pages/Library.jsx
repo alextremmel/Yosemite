@@ -12,7 +12,7 @@ function Library() {
   const [filters, setFilters] = useState({ searchTerm: '', language_id: '', tag_id: '' });
 
   useEffect(() => {
-    fetchWithFilters(filters); 
+    fetchWithFilters(filters);
     getLanguages();
     getTags();
   }, []);
@@ -20,28 +20,28 @@ function Library() {
   const fetchWithFilters = async (currentFilters) => {
       setLoading(true);
       let query = supabase.from('content').select(`*, languages ( name ), content_tags ( name )`);
-      
-      if (currentFilters.searchTerm) { 
-        query = query.ilike('title', `%${currentFilters.searchTerm}%`); 
+
+      if (currentFilters.searchTerm) {
+        query = query.ilike('title', `%${currentFilters.searchTerm}%`);
       }
-      if (currentFilters.language_id) { 
-        query = query.eq('language_id', currentFilters.language_id); 
+      if (currentFilters.language_id) {
+        query = query.eq('language_id', currentFilters.language_id);
       }
-      if (currentFilters.tag_id) { 
-        query = query.eq('tag_id', currentFilters.tag_id); 
+      if (currentFilters.tag_id) {
+        query = query.eq('tag_id', currentFilters.tag_id);
       }
 
       query = query.order('created_at', { ascending: false });
 
       const { data, error } = await query;
-      if (error) { 
-        console.error("Error fetching content:", error); 
-      } else { 
-        setContents(data); 
+      if (error) {
+        console.error("Error fetching content:", error);
+      } else {
+        setContents(data);
       }
       setLoading(false);
   }
-  
+
   const clearFilters = () => {
       const cleared = { searchTerm: '', language_id: '', tag_id: '' };
       setFilters(cleared);
@@ -70,11 +70,11 @@ function Library() {
       .select()
       .single();
 
-    if (error) { 
-      alert('Could not create new content.'); 
+    if (error) {
+      alert('Could not create new content.');
       console.error('Error creating new content:', error);
-    } else { 
-      navigate(`/content/${newContent.id}?edit=true`); 
+    } else {
+      navigate(`/content/${newContent.id}?edit=true`);
     }
   }
 
@@ -82,31 +82,42 @@ function Library() {
     <div>
         {/* Page Header */}
         <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
-            <h1 className="text-3xl font-bold text-gray-800">Content Library</h1>
-            <nav className="flex items-center space-x-6">
-                <NavLink 
-                    to="/"
-                    className={({ isActive }) => 
-                      "font-medium " + (isActive ? "text-indigo-600" : "text-gray-600 hover:text-indigo-600")
-                    }
-                >
-                    Library
-                </NavLink>
-                <NavLink 
-                    to="/phrases" 
-                    className={({ isActive }) => 
-                      "font-medium " + (isActive ? "text-indigo-600" : "text-gray-600 hover:text-indigo-600")
-                    }
-                >
-                    Phrases
-                </NavLink>
+            {/* Left Side */}
+            <div className="flex-1">
                 <button onClick={handleCreateNew} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
                     Add Content
                 </button>
-            </nav>
+            </div>
+
+            {/* Center Title */}
+            <div className="flex-1 text-center">
+                <h1 className="text-3xl font-bold text-gray-800">Content Library</h1>
+            </div>
+
+            {/* Right Side */}
+            <div className="flex-1 flex justify-end">
+                <nav className="flex items-center space-x-6">
+                    <NavLink
+                        to="/"
+                        className={({ isActive }) =>
+                          "font-medium " + (isActive ? "text-indigo-600" : "text-gray-600 hover:text-indigo-600")
+                        }
+                    >
+                        Library
+                    </NavLink>
+                    <NavLink
+                        to="/phrases"
+                        className={({ isActive }) =>
+                          "font-medium " + (isActive ? "text-indigo-600" : "text-gray-600 hover:text-indigo-600")
+                        }
+                    >
+                        Phrases
+                    </NavLink>
+                </nav>
+            </div>
         </div>
-        
+
         {/* Filter controls */}
         <div className="mb-8 p-4 bg-white rounded-lg shadow-sm">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
@@ -129,7 +140,7 @@ function Library() {
                 </div>
             </div>
         </div>
-        
+
         {loading ? (
              <p className="text-center text-gray-500">Loading...</p>
         ) : (

@@ -1,6 +1,14 @@
 oaoyrcXrIIziww89
 
 
+start the supabase in yosemite
+supabase start
+supabase stop
+
+cd into the web app
+npm run dev
+
+
 features
 library search brand
 sort options

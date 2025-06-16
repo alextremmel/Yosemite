@@ -115,25 +115,35 @@ function Phrases() {
         <div>
             {/* Page Header */}
             <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
-                <h1 className="text-3xl font-bold text-gray-800">Phrase Manager</h1>
-                <nav className="flex items-center space-x-6">
-                     <NavLink 
-                        to="/"
-                        className={({ isActive }) => 
-                          "font-medium " + (isActive ? "text-indigo-600" : "text-gray-600 hover:text-indigo-600")
-                        }
-                    >
-                        Library
-                    </NavLink>
-                    <NavLink 
-                        to="/phrases" 
-                        className={({ isActive }) => 
-                          "font-medium " + (isActive ? "text-indigo-600" : "text-gray-600 hover:text-indigo-600")
-                        }
-                    >
-                        Phrases
-                    </NavLink>
-                </nav>
+                {/* Left Spacer */}
+                <div className="flex-1"></div>
+
+                {/* Center Title */}
+                <div className="flex-1 text-center">
+                    <h1 className="text-3xl font-bold text-gray-800">Phrase Manager</h1>
+                </div>
+
+                {/* Right Side */}
+                <div className="flex-1 flex justify-end">
+                    <nav className="flex items-center space-x-6">
+                        <NavLink 
+                            to="/"
+                            className={({ isActive }) => 
+                              "font-medium " + (isActive ? "text-indigo-600" : "text-gray-600 hover:text-indigo-600")
+                            }
+                        >
+                            Library
+                        </NavLink>
+                        <NavLink 
+                            to="/phrases" 
+                            className={({ isActive }) => 
+                              "font-medium " + (isActive ? "text-indigo-600" : "text-gray-600 hover:text-indigo-600")
+                            }
+                        >
+                            Phrases
+                        </NavLink>
+                    </nav>
+                </div>
             </div>
 
             {/* Add/Edit/Filter Form */}
@@ -176,10 +186,10 @@ function Phrases() {
                 <table className="w-full text-left table-auto">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="p-4 font-semibold text-sm text-gray-600">Phrase</th>
-                            <th className="p-4 font-semibold text-sm text-gray-600">Definition</th>
-                            <th className="p-4 font-semibold text-sm text-gray-600 w-32">Language</th>
-                            <th className="p-4 font-semibold text-sm text-gray-600 w-20 text-center">Level</th>
+                            <th className="p-3 font-semibold text-sm text-gray-600">Phrase</th>
+                            <th className="p-3 font-semibold text-sm text-gray-600">Definition</th>
+                            <th className="p-3 font-semibold text-sm text-gray-600 w-32">Language</th>
+                            <th className="p-3 font-semibold text-sm text-gray-600 w-20 text-center">Level</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -190,16 +200,16 @@ function Phrases() {
                         ) : (
                             phrases.map(phrase => (
                                 <tr key={phrase.id} onClick={() => handleEditClick(phrase)} className={`border-b border-gray-200 hover:bg-indigo-50 cursor-pointer ${editingId === phrase.id ? 'bg-indigo-100' : ''}`}>
-                                    <td className="p-4 font-medium">{phrase.phrase}</td>
-                                    <td className="p-4 text-gray-600">{phrase.definition}</td>
-                                    <td className="p-4 text-gray-600">{phrase.languages ? phrase.languages.name : 'N/A'}</td>
-                                    <td className="p-4 text-center">
+                                    <td className="p-3 font-medium">{phrase.phrase}</td>
+                                    <td className="p-3 text-gray-600">{phrase.definition}</td>
+                                    <td className="p-3 text-gray-600">{phrase.languages ? phrase.languages.name : 'N/A'}</td>
+                                    <td className="p-3 text-center">
                                         <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                                            phrase.level === 1 ? 'bg-green-100 text-green-800' :
-                                            phrase.level === 2 ? 'bg-yellow-100 text-yellow-800' :
-                                            phrase.level === 3 ? 'bg-orange-100 text-orange-800' :
-                                            phrase.level === 4 ? 'bg-red-100 text-red-800' :
-                                            'bg-purple-100 text-purple-800'
+                                            phrase.level === 1 ? 'bg-blue-100 text-blue-800' :
+                                            phrase.level === 2 ? 'bg-green-100 text-green-800' :
+                                            phrase.level === 3 ? 'bg-yellow-100 text-yellow-800' :
+                                            phrase.level === 4 ? 'bg-orange-100 text-orange-800' :
+                                            'bg-red-100 text-red-800'
                                         }`}>{phrase.level}</span>
                                     </td>
                                 </tr>
