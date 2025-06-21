@@ -2,6 +2,8 @@ oaoyrcXrIIziww89
 
 
 start the supabase in yosemite
+open docker
+supabase
 supabase start
 supabase stop
 
