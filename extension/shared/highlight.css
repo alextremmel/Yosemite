@@ -1,7 +1,7 @@
 .highlighted-word {
   background-repeat: no-repeat;
   background-position: bottom left; /* Align to left for cleaner start on multi-line */
-  background-size: 100% 2.5px;  /* Slightly thinner underline */
+  background-size: 100% 4px;  /* Slightly thinner underline */
   padding-bottom: 2px; /* Adjusted spacing for thinner underline */
   display: inline; /* Ensure it flows with text */
   /* No background color for the span itself, only the image underline */

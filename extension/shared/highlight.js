@@ -1,4 +1,4 @@
-// shared/highlight.js
+// extension/shared/highlight.js
 
 /**
  * Processes the word list and replaces underscores with spaces in words.
@@ -27,109 +27,111 @@ function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// extension/shared/highlight.js
+
 /**
  * Highlights words on the page based on the provided word list.
+ * This version is designed to solve the "fragmented text" problem where a phrase
+ * is split across multiple HTML elements (like separate <span>s).
  * @param {object} wordList - The processed list of words to highlight.
  * @param {HTMLElement} [root=document.body] - The root element to search for words within.
  */
 function highlightWords(wordList, root = document.body) {
-  if (!root) {
-    return;
-  }
-  if (!wordList || Object.keys(wordList).length === 0) {
-    return;
-  }
-
-  const wordsArray = Object.values(wordList).filter(item => item && typeof item.word === 'string' && item.word.trim() !== '');
-
-  if (wordsArray.length === 0) {
-      return;
-  }
-
-  wordsArray.sort((a, b) => b.word.length - a.word.length);
-
-  const wordMap = {};
-  wordsArray.forEach(item => {
-    wordMap[item.word.toLowerCase()] = item;
-  });
-
-  const escapedWords = wordsArray.map(item => escapeRegExp(item.word));
-  if (escapedWords.length === 0) {
-    return;
-  }
-  const pattern = new RegExp(escapedWords.join("|"), "gi");
-
-  const walker = document.createTreeWalker(
-    root,
-    NodeFilter.SHOW_TEXT,
-    {
-      acceptNode: function(node) {
-        if (node.parentNode) {
-          const tagName = node.parentNode.nodeName.toUpperCase();
-          if (["SCRIPT", "STYLE", "NOSCRIPT", "IFRAME", "OBJECT", "EMBED", "TEXTAREA", "INPUT"].includes(tagName)) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          if (node.parentNode.isContentEditable) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          if (node.parentNode.classList && node.parentNode.classList.contains('highlighted-word')) {
-            return NodeFilter.FILTER_REJECT;
-          }
-        }
-        return NodeFilter.FILTER_ACCEPT;
-      }
-    }
-  );
-
-  const textNodes = [];
-  let currentNode;
-  while (currentNode = walker.nextNode()) {
-    textNodes.push(currentNode);
-  }
-
-  textNodes.forEach(node => {
-    if (node.parentNode && node.parentNode.classList && node.parentNode.classList.contains('highlighted-word')) {
+    if (!root || !wordList || Object.keys(wordList).length === 0) {
         return;
     }
 
-    const originalText = node.textContent;
-    if (!originalText) return;
+    const wordsArray = Object.values(wordList).filter(item => item && typeof item.word === 'string' && item.word.trim() !== '');
+    if (wordsArray.length === 0) return;
 
-    const matches = [...originalText.matchAll(pattern)];
+    wordsArray.sort((a, b) => b.word.length - a.word.length);
 
-    if (matches.length > 0) {
-      const fragment = document.createDocumentFragment();
-      let lastIndex = 0;
+    // This regex works, allowing spaces to be optional to handle different DOM structures.
+    const patternText = wordsArray.map(item => 
+        `(${escapeRegExp(item.word).replace(/ /g, '[\\s\\u00A0]*')})`
+    ).join('|');
+    const pattern = new RegExp(patternText, 'gi');
 
-      matches.forEach(match => {
-        const matchedWordText = match[0];
-        const matchStart = match.index;
-        const matchEnd = matchStart + matchedWordText.length;
-
-        if (matchStart > lastIndex) {
-          fragment.appendChild(document.createTextNode(originalText.slice(lastIndex, matchStart)));
+    // 1. READ: Find all relevant text nodes.
+    const textNodes = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode: function(node) {
+            if (node.parentNode.closest('script, style, .highlighted-word, textarea, input')) {
+                return NodeFilter.FILTER_REJECT;
+            }
+            if (node.parentNode.isContentEditable) {
+                return NodeFilter.FILTER_REJECT;
+            }
+            return NodeFilter.FILTER_ACCEPT;
         }
-
-        const wordData = wordMap[matchedWordText.toLowerCase()];
-        if (wordData) {
-          const span = document.createElement("span");
-          span.className = `highlighted-word highlight-level-${wordData.level}`;
-          span.title = wordData.definition || "";
-          span.textContent = matchedWordText;
-          fragment.appendChild(span);
-        } else {
-          fragment.appendChild(document.createTextNode(matchedWordText));
-        }
-        lastIndex = matchEnd;
-      });
-
-      if (lastIndex < originalText.length) {
-        fragment.appendChild(document.createTextNode(originalText.slice(lastIndex)));
-      }
-
-      if (node.parentNode) {
-        node.parentNode.replaceChild(fragment, node);
-      }
+    });
+    while(walker.nextNode()) {
+        textNodes.push(walker.currentNode);
     }
-  });
+    if (textNodes.length === 0) return;
+
+    // 2. MATCH: Join text and find all phrases.
+    const fullText = textNodes.map(n => n.nodeValue).join('');
+    const matches = [...fullText.matchAll(pattern)];
+    
+    // 3. WRITE: Apply highlights using a more robust method.
+    for (const match of matches.reverse()) {
+        const matchStart = match.index;
+        const matchEnd = matchStart + match[0].length;
+        
+        let charCount = 0;
+        let startNode, endNode, startOffset, endOffset;
+
+        for (const node of textNodes) {
+            const nodeLength = node.nodeValue.length;
+            const nodeStart = charCount;
+            const nodeEnd = nodeStart + nodeLength;
+
+            if (startNode === undefined && matchStart >= nodeStart && matchStart < nodeEnd) {
+                startNode = node;
+                startOffset = matchStart - nodeStart;
+            }
+            if (endNode === undefined && matchEnd > nodeStart && matchEnd <= nodeEnd) {
+                endNode = node;
+                endOffset = matchEnd - nodeStart;
+                break;
+            }
+            charCount = nodeEnd;
+        }
+        
+        if (startNode && endNode) {
+            const range = document.createRange();
+            try {
+                range.setStart(startNode, startOffset);
+                range.setEnd(endNode, endOffset);
+                
+                if (range.cloneContents().querySelector('.highlighted-word')) {
+                    continue;
+                }
+
+                let wordData = null;
+                for (let i = 1; i < match.length; i++) {
+                    if (match[i] !== undefined) {
+                        wordData = wordsArray[i - 1];
+                        break;
+                    }
+                }
+                
+                if (wordData) {
+                    // --- THIS IS THE NEW "WRITE" LOGIC ---
+                    // It's more robust than surroundContents.
+                    const highlightSpan = document.createElement("span");
+                    highlightSpan.className = `highlighted-word highlight-level-${wordData.level}`;
+                    highlightSpan.title = wordData.definition || "";
+
+                    const rangeContents = range.extractContents();
+                    highlightSpan.appendChild(rangeContents);
+                    range.insertNode(highlightSpan);
+                    // ------------------------------------
+                }
+            } catch (e) {
+                // Fails silently if a range is invalid.
+            }
+        }
+    }
 }

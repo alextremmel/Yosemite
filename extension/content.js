@@ -1,4 +1,4 @@
-// content.js
+// extension/content.js
 let currentWordList = {}; // This will be populated by processWordList from shared/highlight.js
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
